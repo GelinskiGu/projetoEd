@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 typedef struct figurinha
 {
@@ -36,6 +37,7 @@ typedef struct cabecaAlbum
 {
     TAlbum *inicio;
     TAlbum *fim;
+    TAlbum *repetidas;
 } TCabeca;
 
 TCabeca *criaCabecaAlbum();
@@ -45,9 +47,13 @@ void lerSelecoes(FILE *parquivo, TSelecao **prim);
 void lerFigurinhasJogadores(FILE *parquivo, TJogador **prim);
 void imprimeListaSelecoes(TSelecao *p);
 void imprimeListaFigurinhasJogadores(TJogador *p);
+int gerarNumero(int k);
+TJogador *buscaJogador(TJogador *listajog, int jogador);
 
 int main()
 {
+    int op = 0, op2 = 0, opc, selec, jog;
+
     FILE *arquivoSelecao, *arquivoFigurinhaJogador;
     arquivoSelecao = fopen("selecoes.txt", "r");
     arquivoFigurinhaJogador = fopen("figurinhas_total.txt", "r");
@@ -61,6 +67,58 @@ int main()
         lerFigurinhasJogadores(arquivoFigurinhaJogador, &primJogador);
     fclose(arquivoFigurinhaJogador);
     imprimeListaFigurinhasJogadores(primJogador);
+
+    while (op != 7)
+    {
+        printf("7-sair\n");
+        scanf("%d", &op);
+        switch (op)
+        {
+        case 1:
+        {
+            jog = gerarNumero(19);
+            selec = gerarNumero(32);
+        }
+        break;
+
+        case 2:
+        {
+        }
+        break;
+        default:
+        {
+        }
+        break;
+        }
+    }
+}
+
+TSelecao *buscaSelecao(TSelecao *listaselec, int selec)
+{ // Ata pia, nao sabia, tá certo agora né ? acho que ta
+    TSelecao *tmp = NULL;
+    tmp = listaselec;
+    while (tmp->prox != NULL && tmp->selecao != selec)
+        tmp = tmp->prox;
+    return tmp;
+}
+
+TJogador *buscaJogador(TJogador *listajog, int jogador)
+{ // É isso. Tem q testar na main só. Printa na main pra ver se ta td certo
+    TJogador *tmp = NULL;
+    tmp = listajog;
+    // Sim pia
+    //  A gente ta forcando que o numero seja entre 0 e 19, nunca vai chegar a tmp->prox == NULL
+    while (tmp->chave != jogador)
+        tmp = tmp->prox;
+    return tmp;
+}
+
+int gerarNumero(int k)
+{
+    int x;
+    srand(time(NULL));
+    x = rand() % k;
+    return x;
 }
 
 TCabeca *criaCabecaAlbum()
@@ -71,6 +129,17 @@ TCabeca *criaCabecaAlbum()
         return NULL;
     novo->inicio = NULL;
     novo->fim = NULL;
+    novo->repetidas = NULL;
+    return novo;
+}
+
+TAlbum *criaAlbum()
+{
+    TAlbum *novo = NULL;
+    novo = (TAlbum *)malloc(sizeof(TAlbum));
+    if (!novo)
+        return NULL;
+    novo->prox = NULL;
     return novo;
 }
 
