@@ -45,12 +45,13 @@ TAlbum *criaAlbum();
 void alocaAlbum(TCabeca *cabecaAlbum);
 TSelecao *alocaSelecao(FILE *parquivo);
 TFig *alocaFigurinhaAlbum(TSelecao *structSelecao, TJogador *structJogador);
-void insereFigurinhaAlbum(TAlbum *album, TSelecao *structSelecao, TJogador *structJogador);
+void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *listaselec, TJogador *listajog);
 TJogador *alocaFigurinhaJogador(FILE *parquivo);
 void lerSelecoes(FILE *parquivo, TSelecao **prim);
 void lerFigurinhasJogadores(FILE *parquivo, TJogador **prim);
 void imprimeListaSelecoes(TSelecao *p);
 void imprimeListaFigurinhasJogadores(TJogador *p);
+void imprimeAlbum(TFig *album);
 TSelecao *buscaSelecao(TSelecao *listaselec, int selec);
 TJogador *buscaJogador(TJogador *listajog, int jogador, int selecao);
 int gerarNumero(int k);
@@ -78,21 +79,19 @@ int main()
     printf("\n########################\n");
     TSelecao *selecao = NULL;
     TJogador *jogador = NULL;
-    selec = 2;
-    jog = 2;
+    selec = 5;
+    jog = 1;
+    imprimeListaSelecoes(primSelecao);
+    printf("#######################################\n");
     for (int i = 0; i < 20; i++)
     {
-        selecao = buscaSelecao(primSelecao, selec);
-        jogador = buscaJogador(primJogador, jog, selecao->cod_selecao);
-        insereFigurinhaAlbum(cabeca->inicio, selecao, jogador);
-        free(selecao);
-        free(jogador);
+        insereFigurinhaAlbum(&(cabeca->inicio), selec, jog, primSelecao, primJogador);
         jog += 1;
-        if (selec >= 27)
-            selec = 2;
-        if (jog >= 18)
-            jog = 1;
+        selec = 1;
+        // imprimeListaSelecoes(primSelecao);
+        // imprimeListaFigurinhasJogadores(primJogador);
     }
+    imprimeAlbum(cabeca->inicio->fig);
 
     /*
     while (op != 7)
@@ -188,40 +187,69 @@ TFig *alocaFigurinhaAlbum(TSelecao *structSelecao, TJogador *structJogador)
     return novo;
 }
 
-void insereFigurinhaAlbum(TAlbum *album, TSelecao *structSelecao, TJogador *structJogador)
+void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *listaselec, TJogador *listajog)
 {
     TFig *novo = NULL;
+    TSelecao *structSelecao = NULL;
+    TJogador *structJogador = NULL;
+    structSelecao = buscaSelecao(listaselec, selecao);
+    structJogador = buscaJogador(listajog, jogador, selecao);
     novo = alocaFigurinhaAlbum(structSelecao, structJogador);
     TFig *aux = NULL;
-    aux = album->fig;
-    if (!album)
+    aux = (*album)->fig;
+    if (!*album)
         return;
-    if (!(album->fig))
+    if (!(*album)->fig)
     {
-        album->fig = novo;
+        (*album)->fig = novo;
         return;
     }
     else
     {
-        while (aux->cod_selecao < novo->cod_selecao && aux->prox != NULL)
-            aux = aux->prox;
-        if (!(aux->prox))
-            aux->prox = novo;
-        else
-        {
-            TFig *aux2 = NULL;
-            while (aux->numero_jogador < novo->numero_jogador && aux->prox->cod_selecao == novo->cod_selecao)
+        /*
+        if (aux->cod_selecao < novo->cod_selecao)
+        { // Insere no fim
+            while (aux->cod_selecao < novo->cod_selecao)
             {
-                aux2 = aux;
-                aux = aux->prox;
+            }
+        }
+        */
+        if (aux->cod_selecao == novo->cod_selecao) // Se a primeira figurinha já for a selecao correta
+        {
+            if (aux->numero_jogador > novo->numero_jogador)
+            {
+                novo->prox = (*album)->fig->prox;
+                (*album)->fig = novo;
+                return;
             }
             if (aux->prox)
+                while (aux->cod_selecao == novo->cod_selecao && aux->prox != NULL)
+                {
+                    if (aux->prox->numero_jogador > novo->numero_jogador && aux->numero_jogador < novo->numero_jogador)
+                    {
+                        novo->prox = aux->prox;
+                        aux->prox = novo;
+                        return;
+                    }
+                    aux = aux->prox;
+                }
+            if (!aux->prox)
             {
-                novo->prox = aux2->prox;
-                aux2->prox = novo;
+                aux->prox = novo;
+                return;
             }
             else
+            {
+                novo->prox = aux->prox;
                 aux->prox = novo;
+            }
+            return;
+        }
+
+        else // Insere no inicio
+        {
+            novo->prox = (*album)->fig;
+            (*album)->fig = novo;
         }
     }
 }
@@ -295,6 +323,18 @@ void imprimeListaFigurinhasJogadores(TJogador *p) // Printa a lista encadeada de
     else
     {
         printf("\nPosto vazio!\n");
+    }
+}
+
+void imprimeAlbum(TFig *album)
+{
+    if (album)
+    {
+        while (album)
+        {
+            printf("%d %s %d %s\n", album->cod_selecao, album->selecao, album->numero_jogador, album->nome);
+            album = album->prox;
+        }
     }
 }
 
