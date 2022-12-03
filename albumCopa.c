@@ -54,7 +54,7 @@ void imprimeListaFigurinhasJogadores(TJogador *p);
 void imprimeAlbum(TFig *album);
 TSelecao *buscaSelecao(TSelecao *listaselec, int selec);
 TJogador *buscaJogador(TJogador *listajog, int jogador, int selecao);
-int gerarNumero(int k);
+int gerarNumero(int k, int cont);
 
 int main()
 {
@@ -79,19 +79,23 @@ int main()
     printf("\n########################\n");
     TSelecao *selecao = NULL;
     TJogador *jogador = NULL;
-    selec = 5;
+    selec = 32;
     jog = 1;
     imprimeListaSelecoes(primSelecao);
     printf("#######################################\n");
-    for (int i = 0; i < 20; i++)
+    int i = 0;
+    int cont = 0;
+    while (i < 30)
     {
+        selec = gerarNumero(31, cont);
+        cont += 1000;
+        jog = gerarNumero(19, cont);
+        cont += 1000;
         insereFigurinhaAlbum(&(cabeca->inicio), selec, jog, primSelecao, primJogador);
-        jog += 1;
-        selec = 1;
-        // imprimeListaSelecoes(primSelecao);
-        // imprimeListaFigurinhasJogadores(primJogador);
+        printf("#######################################\n");
+        imprimeAlbum(cabeca->inicio->fig);
+        i++;
     }
-    imprimeAlbum(cabeca->inicio->fig);
 
     /*
     while (op != 7)
@@ -183,7 +187,7 @@ TFig *alocaFigurinhaAlbum(TSelecao *structSelecao, TJogador *structJogador)
     strcpy(novo->selecao, structSelecao->selecao);
     novo->prox = NULL;
     printf("\n###############\n");
-    printf("%d %d %s %s\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+    printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
     return novo;
 }
 
@@ -202,56 +206,189 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
     if (!(*album)->fig)
     {
         (*album)->fig = novo;
-        return;
     }
     else
     {
-        /*
-        if (aux->cod_selecao < novo->cod_selecao)
-        { // Insere no fim
-            while (aux->cod_selecao < novo->cod_selecao)
-            {
-            }
-        }
-        */
-        if (aux->cod_selecao == novo->cod_selecao) // Se a primeira figurinha já for a selecao correta
+        if (aux->cod_selecao < novo->cod_selecao) // Insere no fim
         {
+
+            if (aux->prox)
+            {
+
+                TFig *aux2 = NULL;
+                while ((aux->prox != NULL) && (aux->prox->cod_selecao <= novo->cod_selecao))
+                {
+                    aux2 = aux;
+                    aux = aux->prox;
+                }
+                if (aux->cod_selecao == novo->cod_selecao)
+                {
+                    if (aux->prox && aux2->numero_jogador >= novo->numero_jogador) // ULTIMA mudanca aki
+                    {
+                        printf("ENTRA AKI %d %d %d\n", aux->numero_jogador, aux2->numero_jogador, novo->numero_jogador);
+
+                        printf("Entrou 1\n");
+                        novo->prox = aux2->prox;
+                        aux2->prox = novo;
+                    }
+                    else if (aux->prox)
+                    {
+                        printf("Entrou 2\n");
+                        /*
+                        if (aux->numero_jogador > novo->numero_jogador)
+                        {
+                            novo->prox = aux;
+                            aux2->prox = novo;
+                            return;
+                        }
+                        */
+                        // else
+                        if (aux->prox->cod_selecao != novo->cod_selecao)
+                        {
+                            printf("Entrou aki, gloria!\n");
+                            if (aux->numero_jogador > novo->numero_jogador)
+                            {
+                                novo->prox = aux;
+                                aux2->prox = novo;
+                            }
+                            else
+                            {
+                                novo->prox = aux->prox;
+                                aux->prox = novo;
+                            }
+                        }
+                        else
+                        {
+                            while (aux->prox != NULL && aux->prox->cod_selecao == novo->cod_selecao)
+                            {
+                                printf("Ta entrando dentro do while\n");
+                                aux2 = aux;
+                                if ((aux->prox->numero_jogador >= novo->numero_jogador))
+                                {
+                                    printf("Chegou aki\n");
+                                    novo->prox = aux->prox;
+                                    aux->prox = novo;
+                                    return;
+                                }
+                                aux = aux->prox;
+                            }
+                            if (aux->prox)
+                            {
+                                printf("Chegou aki 2 %d %d\n", aux->numero_jogador, novo->numero_jogador);
+                                novo->prox = aux->prox;
+                                aux->prox = novo;
+                            }
+                            else
+                            {
+                                aux->prox = novo;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        printf("Entrou 3\n");
+                        aux->prox = novo;
+                    }
+                }
+                else
+                {
+                    printf("Nao ta entrando aki %d %d\n", aux->cod_selecao, novo->cod_selecao);
+                    novo->prox = aux->prox;
+                    aux->prox = novo;
+                }
+                /*
+                if (aux->prox)
+                {
+                    while (aux->cod_selecao == novo->cod_selecao && aux->prox != NULL)
+                    {
+                        if ((aux->prox->numero_jogador > novo->numero_jogador) && (aux->numero_jogador < novo->numero_jogador))
+                        {
+                            novo->prox = aux->prox;
+                            aux->prox = novo;
+                            return;
+                        }
+                        aux = aux->prox;
+                    }
+
+                    if (!aux->prox)
+                    {
+                        aux->prox = novo;
+                        return;
+                    }
+                }
+                else if (!aux->prox)
+                {
+                    aux->prox = novo;
+                    return;
+                }
+                else
+                {
+                    novo->prox = aux->prox;
+                    aux->prox = novo;
+                    return;
+                }
+                */
+            }
+            else
+                aux->prox = novo;
+        }
+
+        else if (aux->cod_selecao == novo->cod_selecao) // Se a primeira figurinha já for a selecao correta // CONDICAO CORRETA!!!!
+        {
+            printf("Chegou aki?%d %d\n", aux->cod_selecao, novo->cod_selecao);
+
             if (aux->numero_jogador > novo->numero_jogador)
             {
-                novo->prox = (*album)->fig->prox;
+                novo->prox = (*album)->fig;
                 (*album)->fig = novo;
-                return;
             }
-            if (aux->prox)
+            else if (aux->prox)
+            {
+                TFig *aux3 = NULL;
                 while (aux->cod_selecao == novo->cod_selecao && aux->prox != NULL)
                 {
-                    if (aux->prox->numero_jogador > novo->numero_jogador && aux->numero_jogador < novo->numero_jogador)
+                    aux3 = aux;
+                    if ((aux->prox->numero_jogador > novo->numero_jogador))
                     {
+                        printf("Existe\n");
+
                         novo->prox = aux->prox;
                         aux->prox = novo;
                         return;
                     }
                     aux = aux->prox;
                 }
-            if (!aux->prox)
+
+                if (!aux->prox)
+                {
+                    aux->prox = novo;
+                }
+                else
+                {
+                    printf("Aki estava o problema?\n");
+                    novo->prox = aux3->prox;
+                    aux3->prox = novo;
+                }
+            }
+            else if (!aux->prox)
             {
                 aux->prox = novo;
-                return;
             }
             else
             {
                 novo->prox = aux->prox;
                 aux->prox = novo;
             }
-            return;
         }
-
         else // Insere no inicio
         {
+            printf("Aki?\n");
             novo->prox = (*album)->fig;
             (*album)->fig = novo;
+            return;
         }
     }
+    return;
 }
 
 TJogador *alocaFigurinhaJogador(FILE *parquivo) // Cria e retorna um nó TJogador
@@ -360,11 +497,11 @@ TJogador *buscaJogador(TJogador *listajog, int jogador, int selecao)
     return tmp;
 }
 
-int gerarNumero(int k)
+int gerarNumero(int k, int cont)
 {
     int x;
     time_t t;
-    srand((unsigned)time(&t));
+    srand((unsigned)time(&t) + cont);
     x = (rand() % k) + 1;
     return x;
 }
