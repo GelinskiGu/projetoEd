@@ -223,10 +223,9 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                 }
                 if (aux->cod_selecao == novo->cod_selecao)
                 {
-                    if (aux->prox && aux2->numero_jogador >= novo->numero_jogador) // ULTIMA mudanca aki
+                    if (aux->prox && aux->numero_jogador >= novo->numero_jogador) // ULTIMA mudanca aki
                     {
                         printf("ENTRA AKI %d %d %d\n", aux->numero_jogador, aux2->numero_jogador, novo->numero_jogador);
-
                         printf("Entrou 1\n");
                         novo->prox = aux2->prox;
                         aux2->prox = novo;
@@ -286,9 +285,26 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                     }
                     else
                     {
+                        if (aux->numero_jogador >= novo->numero_jogador)
+                        {
+                            printf("Entrou certo 234901283 %d %d %d\n", aux->numero_jogador, aux2->numero_jogador, novo->numero_jogador);
+                            novo->prox = aux2->prox;
+                            aux2->prox = novo;
+                        }
+                        else
+                        {
+                            printf("Entrou 3\n");
+                            aux->prox = novo;
+                        }
+                    }
+
+                    /*
+                    else
+                    {
                         printf("Entrou 3\n");
                         aux->prox = novo;
                     }
+                    */
                 }
                 else
                 {
