@@ -58,7 +58,8 @@ int gerarNumero(int k, int cont);
 
 int main()
 {
-    int op = 0, op2 = 0, opc, selec, jog;
+    // int op = 0, op2 = 0, opc
+    int selec, jog;
 
     FILE *arquivoSelecao, *arquivoFigurinhaJogador;
     arquivoSelecao = fopen("selecoes.txt", "r");
@@ -77,27 +78,27 @@ int main()
     cabeca = criaCabecaAlbum();
     alocaAlbum(cabeca);
     printf("\n########################\n");
-    TSelecao *selecao = NULL;
-    TJogador *jogador = NULL;
     selec = 32;
     jog = 1;
     imprimeListaSelecoes(primSelecao);
     printf("#######################################\n");
     int i = 0;
     int cont = 0;
-    while (i < 60)
+    while (i < 200)
     {
-        selec = gerarNumero(31, cont);
+        selec = gerarNumero(32, cont);
         cont += 1000;
         jog = gerarNumero(19, cont);
         cont += 1000;
         insereFigurinhaAlbum(&(cabeca->inicio), selec, jog, primSelecao, primJogador);
-        printf("#######################################\n");
-
+        // printf("#######################################\n");
+        //  imprimeAlbum(cabeca->inicio->fig);
         i++;
     }
+    printf("#######################################\n");
     imprimeAlbum(cabeca->inicio->fig);
-
+    if (i < 40)
+        printf("deu ruim?\n");
     /*
     while (op != 7)
     {
@@ -187,8 +188,8 @@ TFig *alocaFigurinhaAlbum(TSelecao *structSelecao, TJogador *structJogador)
     strcpy(novo->nome, structJogador->nome);
     strcpy(novo->selecao, structSelecao->selecao);
     novo->prox = NULL;
-    printf("\n###############\n");
-    printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+    // printf("\n###############\n");
+    // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
     return novo;
 }
 
@@ -217,13 +218,31 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
             {
 
                 TFig *aux2 = NULL;
-                while ((aux->prox != NULL) && (aux->prox->cod_selecao <= novo->cod_selecao))
+                while ((aux->prox != NULL))
                 {
+                    if (aux->cod_selecao >= novo->cod_selecao)
+                    {
+                        // printf("Breakou\n aux:%d aux2:%d novo:%d\n", aux->cod_selecao, aux2->cod_selecao, novo->cod_selecao);
+                        break;
+                    }
                     aux2 = aux;
                     aux = aux->prox;
                 }
-                if (aux->cod_selecao == novo->cod_selecao)
+                if (!aux->prox)
                 {
+                    // printf("aqui está o bug? aux:%d aux2:%d novo:%d\n", aux->cod_selecao, aux2->cod_selecao, novo->cod_selecao);
+                    // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                    aux->prox = novo;
+                }
+                else if (aux->cod_selecao > novo->cod_selecao)
+                {
+                    novo->prox = aux2->prox;
+                    aux2->prox = novo;
+                    // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                }
+                else if (aux->cod_selecao == novo->cod_selecao)
+                {
+                    /*
                     if (aux->prox && aux->numero_jogador >= novo->numero_jogador) // ULTIMA mudanca aki
                     {
                         printf("ENTRA AKI %d %d %d\n", aux->numero_jogador, aux2->numero_jogador, novo->numero_jogador);
@@ -231,17 +250,42 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                         novo->prox = aux2->prox;
                         aux2->prox = novo;
                     }
+                    Mudando para inserir algo maior*/
+                    if (aux->numero_jogador > novo->numero_jogador)
+                    {
+                        // printf("!!aux: %d, aux2: %d, novo:%d\n", aux->numero_jogador, aux2->numero_jogador, novo->numero_jogador);
+                        // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                        novo->prox = aux;
+                        aux2->prox = novo;
+                    }
+                    else
+                    {
+                        while (aux->prox->cod_selecao == novo->cod_selecao && aux->prox->numero_jogador <= novo->numero_jogador && aux->prox)
+                        {
+                            aux = aux->prox;
+                        }
+                        if (aux->prox)
+                        {
+                            // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                            novo->prox = aux->prox;
+                            aux->prox = novo;
+                        }
+                        else
+                        {
+                            aux->prox = novo;
+                            // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                        }
+                    }
+                    /*
                     else if (aux->prox)
                     {
                         printf("Entrou 2\n");
-                        /*
                         if (aux->numero_jogador > novo->numero_jogador)
                         {
                             novo->prox = aux;
                             aux2->prox = novo;
                             return;
                         }
-                        */
                         // else
                         if (aux->prox->cod_selecao != novo->cod_selecao)
                         {
@@ -284,21 +328,23 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                             }
                         }
                     }
-                    else
-                    {
-                        if (aux->numero_jogador >= novo->numero_jogador)
-                        {
-                            printf("Entrou certo 234901283 %d %d %d\n", aux->numero_jogador, aux2->numero_jogador, novo->numero_jogador);
-                            novo->prox = aux2->prox;
-                            aux2->prox = novo;
-                        }
-                        else
-                        {
-                            printf("Entrou 3\n");
-                            aux->prox = novo;
-                        }
-                    }
-
+                    */
+                    /*
+                     else
+                     {
+                         if (aux->numero_jogador >= novo->numero_jogador && aux->prox != NULL)
+                         {
+                             printf("Entrou certo 234901283 %d %d %d\n", aux->numero_jogador, aux2->numero_jogador, novo->numero_jogador);
+                             novo->prox = aux2->prox;
+                             aux2->prox = novo;
+                         }
+                         else
+                         {
+                             printf("Entrou 3\n");
+                             aux->prox = novo;
+                         }
+                     }
+                     */
                     /*
                     else
                     {
@@ -309,8 +355,16 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                 }
                 else
                 {
-                    printf("Nao ta entrando aki %d %d\n", aux->cod_selecao, novo->cod_selecao);
-                    novo->prox = aux->prox;
+                    /*
+                    if (aux->prox)
+                    {
+                        printf("Nao ta entrando aki %d %d\n", aux->cod_selecao, novo->cod_selecao);
+                        novo->prox = aux->prox;
+                        aux->prox = novo;
+                        return;
+                    }
+                    else
+                    */
                     aux->prox = novo;
                 }
                 /*
@@ -352,7 +406,7 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
 
         else if (aux->cod_selecao == novo->cod_selecao) // Se a primeira figurinha já for a selecao correta // CONDICAO CORRETA!!!!
         {
-            printf("Chegou aki?%d %d\n", aux->cod_selecao, novo->cod_selecao);
+            // printf("Chegou aki?%d %d\n", aux->cod_selecao, novo->cod_selecao);
 
             if (aux->numero_jogador > novo->numero_jogador)
             {
@@ -367,7 +421,7 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                     aux3 = aux;
                     if ((aux->prox->numero_jogador > novo->numero_jogador))
                     {
-                        printf("Existe\n");
+                        //  printf("Existe\n");
 
                         novo->prox = aux->prox;
                         aux->prox = novo;
@@ -382,7 +436,7 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                 }
                 else
                 {
-                    printf("Aki estava o problema?\n");
+                    // printf("Aki estava o problema?\n");
                     novo->prox = aux3->prox;
                     aux3->prox = novo;
                 }
@@ -399,7 +453,7 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
         }
         else // Insere no inicio
         {
-            printf("Aki?\n");
+            // printf("Aki?\n");
             novo->prox = (*album)->fig;
             (*album)->fig = novo;
             return;
