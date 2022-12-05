@@ -85,7 +85,7 @@ int main()
     printf("#######################################\n");
     int i = 0;
     int cont = 0;
-    while (i < 30)
+    while (i < 60)
     {
         selec = gerarNumero(31, cont);
         cont += 1000;
@@ -93,9 +93,10 @@ int main()
         cont += 1000;
         insereFigurinhaAlbum(&(cabeca->inicio), selec, jog, primSelecao, primJogador);
         printf("#######################################\n");
-        imprimeAlbum(cabeca->inicio->fig);
+
         i++;
     }
+    imprimeAlbum(cabeca->inicio->fig);
 
     /*
     while (op != 7)
