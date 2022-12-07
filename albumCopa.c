@@ -30,6 +30,7 @@ typedef struct figurinhaJogador // Struct para leitura de jogadores do arquivo f
 typedef struct album // Struct para fazer lista de albuns, e cada album ter suas figurinhas
 {
     int chave;
+    float gasto;
     struct album *prox;
     TFig *fig;
 } TAlbum;
@@ -42,8 +43,8 @@ typedef struct cabecaAlbum // Struct cabeca para albuns e um album para figurinh
 } TCabeca;
 
 TCabeca *criaCabecaAlbum();
-TAlbum *criaAlbum();
-void alocaAlbum(TCabeca *cabecaAlbum, int k);
+TAlbum *criaAlbum(int k);
+void alocaAlbum(TCabeca *cabecaAlbum, int op, int k);
 TSelecao *alocaSelecao(FILE *parquivo);
 TFig *alocaFigurinhaAlbum(TSelecao *structSelecao, TJogador *structJogador);
 void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *listaselec, TJogador *listajog, TAlbum **repetidas);
@@ -58,13 +59,14 @@ TSelecao *buscaSelecao(TSelecao *listaselec, int selec);
 TJogador *buscaJogador(TJogador *listajog, int jogador, int selecao);
 void gerarNumero(int cont, int *p);
 void insereFigurinhaAlbumRepetida(TAlbum **repetida, TFig *novo);
-void buscaFigurinhasRepetidas(TAlbum *album, TFig **figurinha, TSelecao *listaselec, TJogador *listajog, TAlbum **repetidas);
+void buscaFigurinhasRepetidas(TAlbum *album, TFig **figurinha, TSelecao *listaselec, TJogador *listajog, TAlbum **repetidas, TCabeca *cabeca);
 int checarAlbumCompleto(TAlbum *album);
+void removeFigurinhasAlbum(TFig **figurinha);
 
 int main()
 {
     int op = 0, op2 = 0, opc;
-    int selec = 32, jog = 1, i = 0, cont = 0, *p = NULL, contadorExtra = 0;
+    int selec = 32, jog = 1, i = 0, cont = 0, *p = NULL, contadorExtra = 0, contadorAlbum = 0;
     float gastos = 0.0;
 
     FILE *arquivoSelecao, *arquivoFigurinhaJogador, *arquivoFigurinhaJogadorEntrada;
@@ -88,30 +90,11 @@ int main()
     // imprimeListaFigurinhasJogadores(primJogador);
     TCabeca *cabeca = NULL;
     cabeca = criaCabecaAlbum();
-    alocaAlbum(cabeca, 1);
+    alocaAlbum(cabeca, 1, contadorAlbum);
+    contadorAlbum++;
     gastos += 12;
-    alocaAlbum(cabeca, 0);
-    printf("\n########################\n");
-    imprimeListaSelecoes(primSelecao);
-    printf("#######################################\n");
+    alocaAlbum(cabeca, 0, -1);
     p = (int *)malloc(sizeof(int) * 10);
-
-    gerarNumero(cont, p);
-    while (i < 2)
-    {
-        // selec = gerarNumero(32, cont, p);
-        cont += 1000;
-        // jog = gerarNumero(19, cont, p);
-        cont += 1000;
-        // insereFigurinhaAlbum(&(cabeca->inicio), selec, jog, primSelecao, primJogador, &(cabeca->repetidas));
-        i++;
-    }
-
-    printf("#######################################\n");
-    if (cabeca->repetidas->fig)
-        imprimeAlbum(cabeca->repetidas->fig);
-    for (int k = 0; k < 5; k++)
-        printf("%d\n", *(p + k));
     /*
     for (int i = 1; i <= 32; i++)
     {
@@ -122,8 +105,6 @@ int main()
         }
     }
     */
-    printf("#######################################\n");
-    imprimeAlbum(cabeca->inicio->fig);
     while (op != 8)
     {
         printf("1-Inicializacao\n2-Comprar novo album\n3-Comprar pacote figurinha\n4-Vender album\n5-Vender figurinhas repetidas\n6-relatorio de gastos\n7-Relatorio de lucros\n8-sair\n");
@@ -132,24 +113,46 @@ int main()
         {
         case 1:
         {
-            TFig *aux = NULL;
-            aux = primJogadorEntrada;
-            while (aux->prox)
+            if (primJogadorEntrada)
             {
+                TFig *aux = NULL;
+                aux = primJogadorEntrada;
+                while (aux->prox)
+                {
+                    insereFigurinhaAlbum(&(cabeca->fim), aux->cod_selecao, aux->numero_jogador, primSelecao, primJogador, &(cabeca->repetidas));
+                    gastos += 0.8;
+                    aux = aux->prox;
+                }
                 insereFigurinhaAlbum(&(cabeca->fim), aux->cod_selecao, aux->numero_jogador, primSelecao, primJogador, &(cabeca->repetidas));
                 gastos += 0.8;
-                aux = aux->prox;
+                printf("R$%.2f\n", gastos);
+                buscaFigurinhasRepetidas(cabeca->fim, &(cabeca->repetidas->fig), primSelecao, primJogador, &(cabeca->repetidas), cabeca);
+                printf("################################################################\n");
+                imprimeAlbum(cabeca->fim->fig);
+                printf("################################\n");
+                if (cabeca->repetidas->fig)
+                    imprimeAlbum(cabeca->repetidas->fig);
+                removeFigurinhasAlbum(&primJogadorEntrada);
             }
-            insereFigurinhaAlbum(&(cabeca->fim), aux->cod_selecao, aux->numero_jogador, primSelecao, primJogador, &(cabeca->repetidas));
-            gastos += 0.8;
-            printf("R$%.2f\n", gastos);
+            else
+            {
+                printf("Voce ja fez a inicializacao.\n");
+            }
         }
         break;
 
         case 2:
         {
-            alocaAlbum(cabeca, 1);
-            alocaAlbum(cabeca, 1);
+            alocaAlbum(cabeca, 1, contadorAlbum);
+            contadorAlbum++;
+            buscaFigurinhasRepetidas(cabeca->fim, &(cabeca->repetidas->fig), primSelecao, primJogador, &(cabeca->repetidas), cabeca);
+            printf("##########################################\n");
+            printf("Album novo:\n");
+            imprimeAlbum(cabeca->fim->fig);
+            printf("######################################\n");
+            printf("Repetidas:\n");
+            if (cabeca->repetidas->fig)
+                imprimeAlbum(cabeca->repetidas->fig);
         }
         break;
 
@@ -204,7 +207,7 @@ TCabeca *criaCabecaAlbum()
     return novo;
 }
 
-TAlbum *criaAlbum()
+TAlbum *criaAlbum(int k)
 {
     TAlbum *novo = NULL;
     novo = (TAlbum *)malloc(sizeof(TAlbum));
@@ -212,15 +215,16 @@ TAlbum *criaAlbum()
         return NULL;
     novo->prox = NULL;
     novo->fig = NULL;
-    novo->chave = 1;
+    novo->chave = k;
+    novo->gasto = 12;
     return novo;
 }
 
-void alocaAlbum(TCabeca *cabecaAlbum, int k)
+void alocaAlbum(TCabeca *cabecaAlbum, int op, int k)
 {
     TAlbum *novo = NULL;
-    novo = criaAlbum();
-    if (!k)
+    novo = criaAlbum(k);
+    if (!op)
     {
         if (!novo)
             return;
@@ -278,6 +282,7 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
     structSelecao = buscaSelecao(listaselec, selecao);
     structJogador = buscaJogador(listajog, jogador, selecao);
     novo = alocaFigurinhaAlbum(structSelecao, structJogador);
+    (*album)->gasto += 0.8;
     TFig *aux = NULL;
     aux = (*album)->fig;
     if (!*album)
@@ -818,19 +823,21 @@ void gerarNumero(int cont, int *p)
         *(p + j) = jogador;
     }
 }
-/*
-void buscaFigurinhasRepetidas(TAlbum *album, TFig **figurinha, TSelecao *listaselec, TJogador *listajog, TAlbum **repetidas)
-{
-    if (*figurinha)
-        insereFigurinhaAlbum(&album, (*figurinha)->cod_selecao, (*figurinha)->numero_jogador, listaselec, listajog, repetidas);
-    if (!(*figurinha))
-        return;
 
-    buscaFigurinhasRepetidas(album, &(*figurinha)->prox, listaselec, listajog, repetidas);
-    free(*figurinha);
-    //*figurinha = NULL;
-} #TODO: Tem que fazer essa função
-*/
+void buscaFigurinhasRepetidas(TAlbum *album, TFig **figurinha, TSelecao *listaselec, TJogador *listajog, TAlbum **repetidas, TCabeca *cabeca)
+{
+    TFig *aux = NULL;
+    aux = *figurinha;
+    alocaAlbum(cabeca, 0, -1);
+    while (aux)
+    {
+        insereFigurinhaAlbum(&album, (*figurinha)->cod_selecao, (*figurinha)->numero_jogador, listaselec, listajog, repetidas);
+        (*figurinha) = (*figurinha)->prox;
+        free(aux);
+        aux = *figurinha;
+    }
+    aux = NULL;
+}
 
 int checarAlbumCompleto(TAlbum *album)
 {
@@ -858,4 +865,13 @@ int checarAlbumCompleto(TAlbum *album)
         completo++;
     } while (aux2);
     return completo;
+}
+
+void removeFigurinhasAlbum(TFig **figurinha)
+{
+    if (*figurinha == NULL)
+        return;
+    removeFigurinhasAlbum(&(*figurinha)->prox);
+    free(*figurinha);
+    *figurinha = NULL;
 }
