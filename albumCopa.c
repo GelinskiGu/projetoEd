@@ -29,6 +29,7 @@ typedef struct figurinhaJogador // Struct para leitura de jogadores do arquivo f
 
 typedef struct album // Struct para fazer lista de albuns, e cada album ter suas figurinhas
 {
+    int chave;
     struct album *prox;
     TFig *fig;
 } TAlbum;
@@ -42,30 +43,37 @@ typedef struct cabecaAlbum // Struct cabeca para albuns e um album para figurinh
 
 TCabeca *criaCabecaAlbum();
 TAlbum *criaAlbum();
-void alocaAlbum(TCabeca *cabecaAlbum);
+void alocaAlbum(TCabeca *cabecaAlbum, int k);
 TSelecao *alocaSelecao(FILE *parquivo);
 TFig *alocaFigurinhaAlbum(TSelecao *structSelecao, TJogador *structJogador);
-void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *listaselec, TJogador *listajog);
+void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *listaselec, TJogador *listajog, TAlbum **repetidas);
 TJogador *alocaFigurinhaJogador(FILE *parquivo);
 void lerSelecoes(FILE *parquivo, TSelecao **prim);
 void lerFigurinhasJogadores(FILE *parquivo, TJogador **prim);
+void lerFigurinhasJogadoresEntrada(FILE *parquivo, TFig **prim);
 void imprimeListaSelecoes(TSelecao *p);
 void imprimeListaFigurinhasJogadores(TJogador *p);
 void imprimeAlbum(TFig *album);
 TSelecao *buscaSelecao(TSelecao *listaselec, int selec);
 TJogador *buscaJogador(TJogador *listajog, int jogador, int selecao);
-int gerarNumero(int k, int cont);
+void gerarNumero(int cont, int *p);
+void insereFigurinhaAlbumRepetida(TAlbum **repetida, TFig *novo);
+void buscaFigurinhasRepetidas(TAlbum *album, TFig **figurinha, TSelecao *listaselec, TJogador *listajog, TAlbum **repetidas);
+int checarAlbumCompleto(TAlbum *album);
 
 int main()
 {
-    // int op = 0, op2 = 0, opc
-    int selec, jog;
+    int op = 0, op2 = 0, opc;
+    int selec = 32, jog = 1, i = 0, cont = 0, *p = NULL, contadorExtra = 0;
+    float gastos = 0.0;
 
-    FILE *arquivoSelecao, *arquivoFigurinhaJogador;
+    FILE *arquivoSelecao, *arquivoFigurinhaJogador, *arquivoFigurinhaJogadorEntrada;
     arquivoSelecao = fopen("selecoes.txt", "r");
     arquivoFigurinhaJogador = fopen("figurinhas_total.txt", "r");
+    arquivoFigurinhaJogadorEntrada = fopen("figurinhas_entrada.txt", "r");
     TSelecao *primSelecao = NULL;
     TJogador *primJogador = NULL;
+    TFig *primJogadorEntrada = NULL;
     while (!feof(arquivoSelecao))
         lerSelecoes(arquivoSelecao, &primSelecao);
     fclose(arquivoSelecao);
@@ -73,45 +81,106 @@ int main()
     while (!feof(arquivoFigurinhaJogador))
         lerFigurinhasJogadores(arquivoFigurinhaJogador, &primJogador);
     fclose(arquivoFigurinhaJogador);
+    while (!feof(arquivoFigurinhaJogadorEntrada))
+        lerFigurinhasJogadoresEntrada(arquivoFigurinhaJogadorEntrada, &primJogadorEntrada);
+    fclose(arquivoFigurinhaJogadorEntrada);
+
     // imprimeListaFigurinhasJogadores(primJogador);
     TCabeca *cabeca = NULL;
     cabeca = criaCabecaAlbum();
-    alocaAlbum(cabeca);
+    alocaAlbum(cabeca, 1);
+    gastos += 12;
+    alocaAlbum(cabeca, 0);
     printf("\n########################\n");
-    selec = 32;
-    jog = 1;
     imprimeListaSelecoes(primSelecao);
     printf("#######################################\n");
-    int i = 0;
-    int cont = 0;
-    while (i < 200)
+    p = (int *)malloc(sizeof(int) * 10);
+
+    gerarNumero(cont, p);
+    while (i < 2)
     {
-        selec = gerarNumero(32, cont);
+        // selec = gerarNumero(32, cont, p);
         cont += 1000;
-        jog = gerarNumero(19, cont);
+        // jog = gerarNumero(19, cont, p);
         cont += 1000;
-        insereFigurinhaAlbum(&(cabeca->inicio), selec, jog, primSelecao, primJogador);
-        printf("#######################################\n");
-        imprimeAlbum(cabeca->inicio->fig);
+        // insereFigurinhaAlbum(&(cabeca->inicio), selec, jog, primSelecao, primJogador, &(cabeca->repetidas));
         i++;
     }
+
+    printf("#######################################\n");
+    if (cabeca->repetidas->fig)
+        imprimeAlbum(cabeca->repetidas->fig);
+    for (int k = 0; k < 5; k++)
+        printf("%d\n", *(p + k));
+    /*
+    for (int i = 1; i <= 32; i++)
+    {
+        for (int j = 1; j <= 20; j++)
+        {
+            insereFigurinhaAlbum(&(cabeca->fim), i, j, primSelecao, primJogador, &(cabeca->repetidas));
+
+        }
+    }
+    */
     printf("#######################################\n");
     imprimeAlbum(cabeca->inicio->fig);
-    /*
-    while (op != 7)
+    while (op != 8)
     {
-        printf("7-sair\n");
+        printf("1-Inicializacao\n2-Comprar novo album\n3-Comprar pacote figurinha\n4-Vender album\n5-Vender figurinhas repetidas\n6-relatorio de gastos\n7-Relatorio de lucros\n8-sair\n");
         scanf("%d", &op);
         switch (op)
         {
         case 1:
         {
-            jog = gerarNumero(19);
-            selec = gerarNumero(32);
+            TFig *aux = NULL;
+            aux = primJogadorEntrada;
+            while (aux->prox)
+            {
+                insereFigurinhaAlbum(&(cabeca->fim), aux->cod_selecao, aux->numero_jogador, primSelecao, primJogador, &(cabeca->repetidas));
+                gastos += 0.8;
+                aux = aux->prox;
+            }
+            insereFigurinhaAlbum(&(cabeca->fim), aux->cod_selecao, aux->numero_jogador, primSelecao, primJogador, &(cabeca->repetidas));
+            gastos += 0.8;
+            printf("R$%.2f\n", gastos);
         }
         break;
 
         case 2:
+        {
+            alocaAlbum(cabeca, 1);
+            alocaAlbum(cabeca, 1);
+        }
+        break;
+
+        case 3:
+        {
+            gerarNumero(cont, p);
+            printf("\n");
+            for (int k = 0; k < 10; k++)
+                printf("%d\n", *(p + k));
+        }
+        break;
+
+        case 4:
+        {
+            int completo;
+            completo = checarAlbumCompleto(cabeca->inicio);
+            printf("Completo\n");
+        }
+        break;
+
+        case 5:
+        {
+        }
+        break;
+
+        case 6:
+        {
+        }
+        break;
+
+        case 7:
         {
         }
         break;
@@ -120,7 +189,7 @@ int main()
         }
         break;
         }
-    } */
+    }
 }
 
 TCabeca *criaCabecaAlbum()
@@ -143,24 +212,34 @@ TAlbum *criaAlbum()
         return NULL;
     novo->prox = NULL;
     novo->fig = NULL;
+    novo->chave = 1;
     return novo;
 }
 
-void alocaAlbum(TCabeca *cabecaAlbum)
+void alocaAlbum(TCabeca *cabecaAlbum, int k)
 {
     TAlbum *novo = NULL;
     novo = criaAlbum();
-    if (!novo)
-        return;
-    if (!(cabecaAlbum->inicio))
+    if (!k)
     {
-        cabecaAlbum->inicio = novo;
-        cabecaAlbum->fim = novo;
+        if (!novo)
+            return;
+        cabecaAlbum->repetidas = novo;
     }
     else
     {
-        cabecaAlbum->fim->prox = novo;
-        cabecaAlbum->fim = novo;
+        if (!novo)
+            return;
+        if (!(cabecaAlbum->inicio))
+        {
+            cabecaAlbum->inicio = novo;
+            cabecaAlbum->fim = novo;
+        }
+        else
+        {
+            cabecaAlbum->fim->prox = novo;
+            cabecaAlbum->fim = novo;
+        }
     }
 }
 
@@ -191,7 +270,7 @@ TFig *alocaFigurinhaAlbum(TSelecao *structSelecao, TJogador *structJogador)
     return novo;
 }
 
-void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *listaselec, TJogador *listajog)
+void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *listaselec, TJogador *listajog, TAlbum **repetidas)
 {
     TFig *novo = NULL;
     TSelecao *structSelecao = NULL;
@@ -220,8 +299,8 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                 {
                     if (aux->cod_selecao >= novo->cod_selecao)
                     {
-                        printf("Breakou\n aux:%d aux2:%d novo:%d\n", aux->cod_selecao, aux2->cod_selecao, novo->cod_selecao);
-                        printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                        // printf("Breakou\n aux:%d aux2:%d novo:%d\n", aux->cod_selecao, aux2->cod_selecao, novo->cod_selecao);
+                        // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                         break;
                     }
                     aux2 = aux;
@@ -229,7 +308,225 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                 }
                 if (!aux->prox)
                 {
-                    printf("Falha segmentacao\n");
+                    // printf("Falha segmentacao\n");
+                    if (novo->cod_selecao <= aux->cod_selecao)
+                    {
+                        if (novo->cod_selecao == aux->cod_selecao)
+                        {
+                            if (aux->numero_jogador <= novo->numero_jogador)
+                            {
+                                if (aux->numero_jogador == novo->numero_jogador)
+                                {
+                                    insereFigurinhaAlbumRepetida(repetidas, novo);
+                                    return;
+                                }
+                                aux->prox = novo;
+                                novo->prox = NULL;
+                            }
+                            else
+                            {
+                                if (aux->numero_jogador == novo->numero_jogador)
+                                {
+                                    insereFigurinhaAlbumRepetida(repetidas, novo);
+                                    return;
+                                }
+                                novo->prox = aux;
+                                aux2->prox = novo;
+                                aux->prox = NULL;
+                            }
+                        }
+                        else
+                        {
+                            novo->prox = aux;
+                            aux2->prox = novo;
+                            aux->prox = NULL;
+                        }
+                    }
+                    else
+                    {
+                        // printf("aqui está o bug? aux:%d aux2:%d novo:%d\n", aux->cod_selecao, aux2->cod_selecao, novo->cod_selecao);
+                        // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                        aux->prox = novo;
+                        novo->prox = NULL;
+                    }
+                }
+                else if (aux->cod_selecao > novo->cod_selecao)
+                {
+                    novo->prox = aux2->prox;
+                    aux2->prox = novo;
+                    // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                }
+                else if (aux->cod_selecao == novo->cod_selecao)
+                {
+
+                    if (aux->numero_jogador >= novo->numero_jogador)
+                    {
+                        if (aux->numero_jogador == novo->numero_jogador)
+                        {
+                            insereFigurinhaAlbumRepetida(repetidas, novo);
+                            return;
+                        }
+                        // printf("!!aux: %d, aux2: %d, novo:%d\n", aux->numero_jogador, aux2->numero_jogador, novo->numero_jogador);
+                        // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                        novo->prox = aux;
+                        aux2->prox = novo;
+                    }
+                    else
+                    {
+                        if (aux->prox->numero_jogador > novo->numero_jogador && aux->numero_jogador < novo->numero_jogador)
+                        {
+                            novo->prox = aux->prox;
+                            aux->prox = novo;
+                            return;
+                        }
+                        while (aux->prox != NULL && aux->prox->cod_selecao == novo->cod_selecao && aux->prox->numero_jogador <= novo->numero_jogador)
+                        {
+                            aux = aux->prox;
+                        }
+                        if (aux->numero_jogador == novo->numero_jogador)
+                        {
+                            insereFigurinhaAlbumRepetida(repetidas, novo);
+                            return;
+                        }
+                        if (aux->prox)
+                        {
+                            // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                            novo->prox = aux->prox;
+                            aux->prox = novo;
+                        }
+                        else
+                        {
+                            aux->prox = novo;
+                            // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                        }
+                    }
+                }
+                else
+                {
+                    if (aux->numero_jogador == novo->numero_jogador)
+                    {
+                        insereFigurinhaAlbumRepetida(repetidas, novo);
+                        return;
+                    }
+                    aux->prox = novo;
+                }
+            }
+            else
+            {
+                if (aux->numero_jogador == novo->numero_jogador)
+                {
+                    insereFigurinhaAlbumRepetida(repetidas, novo);
+                    return;
+                }
+                aux->prox = novo;
+            }
+        }
+
+        else if (aux->cod_selecao == novo->cod_selecao) // Se a primeira figurinha já for a selecao correta // CONDICAO CORRETA!!!!
+        {
+            if (aux->numero_jogador == novo->numero_jogador)
+            {
+                insereFigurinhaAlbumRepetida(repetidas, novo);
+                return;
+            }
+            if (aux->numero_jogador > novo->numero_jogador)
+            {
+                novo->prox = (*album)->fig;
+                (*album)->fig = novo;
+            }
+            else if (aux->prox)
+            {
+                TFig *aux3 = NULL;
+                while (aux->cod_selecao == novo->cod_selecao && aux->prox != NULL)
+                {
+                    aux3 = aux;
+                    if ((aux->prox->numero_jogador > novo->numero_jogador))
+                    {
+                        if (aux->numero_jogador == novo->numero_jogador)
+                        {
+                            insereFigurinhaAlbumRepetida(repetidas, novo);
+                            return;
+                        }
+                        novo->prox = aux->prox;
+                        aux->prox = novo;
+                        return;
+                    }
+                    aux = aux->prox;
+                }
+                if (aux->numero_jogador == novo->numero_jogador)
+                {
+                    insereFigurinhaAlbumRepetida(repetidas, novo);
+                    return;
+                }
+
+                if (!aux->prox)
+                {
+                    aux->prox = novo;
+                }
+                else
+                {
+                    // printf("Aki estava o problema?\n");
+                    novo->prox = aux3->prox;
+                    aux3->prox = novo;
+                }
+            }
+            else if (!aux->prox)
+            {
+                if (aux->numero_jogador == novo->numero_jogador)
+                {
+                    insereFigurinhaAlbumRepetida(repetidas, novo);
+                    return;
+                }
+                aux->prox = novo;
+            }
+            else
+            {
+                novo->prox = aux->prox;
+                aux->prox = novo;
+            }
+        }
+        else // Insere no inicio
+        {
+            // printf("Aki?\n");
+            novo->prox = (*album)->fig;
+            (*album)->fig = novo;
+            return;
+        }
+    }
+    return;
+}
+
+void insereFigurinhaAlbumRepetida(TAlbum **repetida, TFig *novo)
+{
+    TFig *aux = NULL;
+    aux = (*repetida)->fig;
+    if (!*repetida)
+        return;
+    if (!(*repetida)->fig)
+        (*repetida)->fig = novo;
+    else
+    {
+        if (aux->cod_selecao < novo->cod_selecao) // Insere no fim
+        {
+
+            if (aux->prox)
+            {
+
+                TFig *aux2 = NULL;
+                while ((aux->prox != NULL))
+                {
+                    if (aux->cod_selecao >= novo->cod_selecao)
+                    {
+                        // printf("Breakou\n aux:%d aux2:%d novo:%d\n", aux->cod_selecao, aux2->cod_selecao, novo->cod_selecao);
+                        // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                        break;
+                    }
+                    aux2 = aux;
+                    aux = aux->prox;
+                }
+                if (!aux->prox)
+                {
+                    // printf("Falha segmentacao\n");
                     if (novo->cod_selecao <= aux->cod_selecao)
                     {
                         if (novo->cod_selecao == aux->cod_selecao)
@@ -255,8 +552,8 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                     }
                     else
                     {
-                        printf("aqui está o bug? aux:%d aux2:%d novo:%d\n", aux->cod_selecao, aux2->cod_selecao, novo->cod_selecao);
-                        printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                        // printf("aqui está o bug? aux:%d aux2:%d novo:%d\n", aux->cod_selecao, aux2->cod_selecao, novo->cod_selecao);
+                        // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                         aux->prox = novo;
                         novo->prox = NULL;
                     }
@@ -265,23 +562,15 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                 {
                     novo->prox = aux2->prox;
                     aux2->prox = novo;
-                    printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                    // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                 }
                 else if (aux->cod_selecao == novo->cod_selecao)
                 {
-                    /*
-                    if (aux->prox && aux->numero_jogador >= novo->numero_jogador) // ULTIMA mudanca aki
-                    {
-                        printf("ENTRA AKI %d %d %d\n", aux->numero_jogador, aux2->numero_jogador, novo->numero_jogador);
-                        printf("Entrou 1\n");
-                        novo->prox = aux2->prox;
-                        aux2->prox = novo;
-                    }
-                    Mudando para inserir algo maior*/
+
                     if (aux->numero_jogador >= novo->numero_jogador)
                     {
-                        printf("!!aux: %d, aux2: %d, novo:%d\n", aux->numero_jogador, aux2->numero_jogador, novo->numero_jogador);
-                        printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                        // printf("!!aux: %d, aux2: %d, novo:%d\n", aux->numero_jogador, aux2->numero_jogador, novo->numero_jogador);
+                        // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                         novo->prox = aux;
                         aux2->prox = novo;
                     }
@@ -292,146 +581,26 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                             novo->prox = aux->prox;
                             aux->prox = novo;
                             return;
-                        } // #TODO: teve alteracoes
+                        }
                         while (aux->prox != NULL && aux->prox->cod_selecao == novo->cod_selecao && aux->prox->numero_jogador <= novo->numero_jogador)
                         {
                             aux = aux->prox;
                         }
                         if (aux->prox)
                         {
-                            printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                            // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                             novo->prox = aux->prox;
                             aux->prox = novo;
                         }
                         else
                         {
                             aux->prox = novo;
-                            printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
+                            // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                         }
                     }
-                    /*
-                    else if (aux->prox)
-                    {
-                        printf("Entrou 2\n");
-                        if (aux->numero_jogador > novo->numero_jogador)
-                        {
-                            novo->prox = aux;
-                            aux2->prox = novo;
-                            return;
-                        }
-                        // else
-                        if (aux->prox->cod_selecao != novo->cod_selecao)
-                        {
-                            printf("Entrou aki, gloria!\n");
-                            if (aux->numero_jogador > novo->numero_jogador)
-                            {
-                                novo->prox = aux;
-                                aux2->prox = novo;
-                            }
-                            else
-                            {
-                                novo->prox = aux->prox;
-                                aux->prox = novo;
-                            }
-                        }
-                        else
-                        {
-                            while (aux->prox != NULL && aux->prox->cod_selecao == novo->cod_selecao)
-                            {
-                                printf("Ta entrando dentro do while\n");
-                                aux2 = aux;
-                                if ((aux->prox->numero_jogador >= novo->numero_jogador))
-                                {
-                                    printf("Chegou aki\n");
-                                    novo->prox = aux->prox;
-                                    aux->prox = novo;
-                                    return;
-                                }
-                                aux = aux->prox;
-                            }
-                            if (aux->prox)
-                            {
-                                printf("Chegou aki 2 %d %d\n", aux->numero_jogador, novo->numero_jogador);
-                                novo->prox = aux->prox;
-                                aux->prox = novo;
-                            }
-                            else
-                            {
-                                aux->prox = novo;
-                            }
-                        }
-                    }
-                    */
-                    /*
-                     else
-                     {
-                         if (aux->numero_jogador >= novo->numero_jogador && aux->prox != NULL)
-                         {
-                             printf("Entrou certo 234901283 %d %d %d\n", aux->numero_jogador, aux2->numero_jogador, novo->numero_jogador);
-                             novo->prox = aux2->prox;
-                             aux2->prox = novo;
-                         }
-                         else
-                         {
-                             printf("Entrou 3\n");
-                             aux->prox = novo;
-                         }
-                     }
-                     */
-                    /*
-                    else
-                    {
-                        printf("Entrou 3\n");
-                        aux->prox = novo;
-                    }
-                    */
                 }
                 else
-                {
-                    /*
-                    if (aux->prox)
-                    {
-                        printf("Nao ta entrando aki %d %d\n", aux->cod_selecao, novo->cod_selecao);
-                        novo->prox = aux->prox;
-                        aux->prox = novo;
-                        return;
-                    }
-                    else
-                    */
                     aux->prox = novo;
-                }
-                /*
-                if (aux->prox)
-                {
-                    while (aux->cod_selecao == novo->cod_selecao && aux->prox != NULL)
-                    {
-                        if ((aux->prox->numero_jogador > novo->numero_jogador) && (aux->numero_jogador < novo->numero_jogador))
-                        {
-                            novo->prox = aux->prox;
-                            aux->prox = novo;
-                            return;
-                        }
-                        aux = aux->prox;
-                    }
-
-                    if (!aux->prox)
-                    {
-                        aux->prox = novo;
-                        return;
-                    }
-                }
-                else if (!aux->prox)
-                {
-                    aux->prox = novo;
-                    return;
-                }
-                else
-                {
-                    novo->prox = aux->prox;
-                    aux->prox = novo;
-                    return;
-                }
-                */
             }
             else
                 aux->prox = novo;
@@ -439,12 +608,12 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
 
         else if (aux->cod_selecao == novo->cod_selecao) // Se a primeira figurinha já for a selecao correta // CONDICAO CORRETA!!!!
         {
-            printf("Chegou aki?%d %d\n", aux->cod_selecao, novo->cod_selecao);
+            // printf("Chegou aki?%d %d\n", aux->cod_selecao, novo->cod_selecao);
 
             if (aux->numero_jogador > novo->numero_jogador)
             {
-                novo->prox = (*album)->fig;
-                (*album)->fig = novo;
+                novo->prox = (*repetida)->fig;
+                (*repetida)->fig = novo;
             }
             else if (aux->prox)
             {
@@ -454,7 +623,7 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                     aux3 = aux;
                     if ((aux->prox->numero_jogador > novo->numero_jogador))
                     {
-                        printf("Existe\n");
+                        // printf("Existe\n");
 
                         novo->prox = aux->prox;
                         aux->prox = novo;
@@ -469,7 +638,7 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                 }
                 else
                 {
-                    printf("Aki estava o problema?\n");
+                    // printf("Aki estava o problema?\n");
                     novo->prox = aux3->prox;
                     aux3->prox = novo;
                 }
@@ -486,9 +655,9 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
         }
         else // Insere no inicio
         {
-            printf("Aki?\n");
-            novo->prox = (*album)->fig;
-            (*album)->fig = novo;
+            // printf("Aki?\n");
+            novo->prox = (*repetida)->fig;
+            (*repetida)->fig = novo;
             return;
         }
     }
@@ -506,6 +675,17 @@ TJogador *alocaFigurinhaJogador(FILE *parquivo) // Cria e retorna um nó TJogado
     return novo;
 }
 
+TFig *alocaFigurinhaJogadorEntrada(FILE *parquivo) // Cria e retorna um nó TFig
+{
+    TFig *novo = NULL;
+    novo = (TFig *)malloc(sizeof(TFig));
+    if (!novo)
+        return NULL;
+    fscanf(parquivo, "%d %s %d %s\n", &novo->cod_selecao, novo->selecao, &novo->numero_jogador, novo->nome);
+    novo->prox = NULL;
+    return novo;
+}
+
 void lerSelecoes(FILE *parquivo, TSelecao **prim) // Insere no final um TSelecao na lista encadeada
 {
     if (!(*prim))
@@ -517,6 +697,8 @@ void lerSelecoes(FILE *parquivo, TSelecao **prim) // Insere no final um TSelecao
         while (aux->prox)
             aux = aux->prox;
         novo = alocaSelecao(parquivo);
+        if (!novo)
+            return;
         aux->prox = novo;
     }
 }
@@ -532,6 +714,25 @@ void lerFigurinhasJogadores(FILE *parquivo, TJogador **prim) // Insere no final 
         while (aux->prox)
             aux = aux->prox;
         novo = alocaFigurinhaJogador(parquivo);
+        if (!novo)
+            return;
+        aux->prox = novo;
+    }
+}
+
+void lerFigurinhasJogadoresEntrada(FILE *parquivo, TFig **prim)
+{
+    if (!(*prim))
+        *prim = alocaFigurinhaJogadorEntrada(parquivo);
+    else
+    {
+        TFig *novo = NULL, *aux = NULL;
+        aux = *prim;
+        while (aux->prox)
+            aux = aux->prox;
+        novo = alocaFigurinhaJogadorEntrada(parquivo);
+        if (!novo)
+            return;
         aux->prox = novo;
     }
 }
@@ -601,11 +802,60 @@ TJogador *buscaJogador(TJogador *listajog, int jogador, int selecao)
     return tmp;
 }
 
-int gerarNumero(int k, int cont)
+void gerarNumero(int cont, int *p)
 {
-    int x;
+    int selecao, jogador;
     time_t t;
     srand((unsigned)time(&t) + cont);
-    x = (rand() % k) + 1;
-    return x;
+    for (int i = 0; i < 5; i++)
+    {
+        selecao = (rand() % 32) + 1;
+        *(p + i) = selecao;
+    }
+    for (int j = 5; j < 10; j++)
+    {
+        jogador = (rand() % 19) + 1;
+        *(p + j) = jogador;
+    }
+}
+/*
+void buscaFigurinhasRepetidas(TAlbum *album, TFig **figurinha, TSelecao *listaselec, TJogador *listajog, TAlbum **repetidas)
+{
+    if (*figurinha)
+        insereFigurinhaAlbum(&album, (*figurinha)->cod_selecao, (*figurinha)->numero_jogador, listaselec, listajog, repetidas);
+    if (!(*figurinha))
+        return;
+
+    buscaFigurinhasRepetidas(album, &(*figurinha)->prox, listaselec, listajog, repetidas);
+    free(*figurinha);
+    //*figurinha = NULL;
+} #TODO: Tem que fazer essa função
+*/
+
+int checarAlbumCompleto(TAlbum *album)
+{
+    int completo = 0, contJogador = 1;
+    TFig *aux = NULL;
+    TAlbum *aux2 = NULL;
+    aux = album->fig;
+    aux2 = album;
+    printf("%d %d\n", aux->cod_selecao, aux->numero_jogador);
+    if (!album->fig || !album)
+        return 0;
+    do
+    {
+        while (aux->prox)
+        {
+            contJogador++;
+            aux = aux->prox;
+        }
+        if (contJogador == 640)
+        {
+            printf("Album %d completo\n", completo);
+        }
+        printf("Passou pelo if\n");
+        aux2 = aux2->prox;
+        completo++;
+    } while (aux2);
+    return completo;
 }
