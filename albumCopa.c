@@ -279,7 +279,7 @@ int main()
                     }
                     else
                     {
-                        printf("Voce nao possui um album com chave %d.", album);
+                        printf("Voce nao possui um album com chave %d.\n", album);
                     }
                 }
             }
@@ -321,6 +321,7 @@ int main()
                 if (op2)
                 {
                     cabecaVendidos->repetidas->gasto += 0.8;
+                    lucros += 0.8;
                     printf("\nFigurinha vendida com sucesso!\n");
                     imprimeAlbum(cabecaVendidos->repetidas->fig);
                 }
@@ -378,10 +379,15 @@ int main()
                     }
                     auxAlbum7 = auxAlbum7->prox;
                 }
-                if (cabecaVendidos->repetidas->fig)
+                if (cabecaVendidos->repetidas)
                 {
-                    printf("Figurinhas repetidas vendidas:\n");
-                    imprimeAlbum(cabecaVendidos->repetidas->fig);
+                    if (cabecaVendidos->repetidas->fig)
+                    {
+                        printf("Figurinhas repetidas vendidas:\n");
+                        imprimeAlbum(cabecaVendidos->repetidas->fig);
+                    }
+                    else
+                        printf("Voce nao vendeu nenhuma figurinha.\n");
                 }
             }
             else
@@ -392,7 +398,7 @@ int main()
         case 8:
         {
             printf("\n");
-            if (!cabeca->inicio)
+            if (!cabeca->inicio && !cabeca->repetidas)
                 printf("Voce nao possui album.\n");
             else
             {
@@ -1172,7 +1178,6 @@ void venderAlbum(TAlbum *album, TCabeca **cabeca)
             (*cabeca)->inicio = NULL;
             (*cabeca)->fim = NULL;
             free(album);
-            return;
         }
     }
     else
@@ -1180,20 +1185,22 @@ void venderAlbum(TAlbum *album, TCabeca **cabeca)
         TAlbum *aux2 = NULL;
         while (aux->chave != album->chave)
         {
-            aux2 = album;
-            album = album->prox;
+            aux2 = aux;
+            aux = aux->prox;
         }
-        if (album->prox)
+        if (aux->prox)
         {
-            aux2->prox = album->prox;
-            free(album);
-            album = NULL;
+            aux2->prox = aux->prox;
+            free(aux);
+            // album = NULL;
         }
         else
         {
             (*cabeca)->fim = aux2;
-            free(album);
-            album = NULL;
+            free(aux);
+            aux = NULL;
+            aux2->prox = NULL;
+            // album = NULL;
         }
     }
 }
@@ -1253,14 +1260,12 @@ void removeFigurinha(TAlbum **figurinha, int cod, int jogador)
                         aux2->prox = aux->prox;
                         printf("%d %d\n", aux->cod_selecao, aux->numero_jogador);
                         free(aux);
-                        printf("Removeu.\n");
                         return;
                     }
                     else
                     {
                         free(aux);
                         aux2->prox = NULL;
-                        printf("Removeu.\n");
                         return;
                     }
                 }
