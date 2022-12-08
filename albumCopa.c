@@ -266,11 +266,10 @@ int main()
                 if (album)
                 {
                     auxAlbum4 = cabeca->inicio;
-                    while (auxAlbum4->chave != album && auxAlbum4 != NULL)
+
+                    while (auxAlbum4->chave != album && auxAlbum4->prox != NULL)
                         auxAlbum4 = auxAlbum4->prox;
-                    if (!auxAlbum4)
-                        printf("Voce nao possui um album com chave %d.\n", album);
-                    else if (auxAlbum4->chave == album && auxAlbum4 != NULL)
+                    if (auxAlbum4->chave == album && auxAlbum4 != NULL)
                     {
                         lucros += auxAlbum4->gasto;
                         alocaAlbum(cabecaVendidos, 1, auxAlbum4->chave);
@@ -278,9 +277,11 @@ int main()
                         venderAlbum(auxAlbum4, &cabeca);
                         printf("Album %d vendido!\n", album);
                     }
+                    else
+                    {
+                        printf("Voce nao possui um album com chave %d.", album);
+                    }
                 }
-                else
-                    printf("Nenhum album vendido.\n");
             }
             printf("\n");
         }
