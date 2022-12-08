@@ -172,7 +172,7 @@ int main()
         }
         break;
 
-        case 3:
+        case 3: // #TODO: Ao comprar figurinhas para um album vendido da bug
         {
             printf("\n");
             if (cabeca->inicio)
@@ -274,6 +274,7 @@ int main()
                         lucros += auxAlbum4->gasto;
                         alocaAlbum(cabecaVendidos, 1, auxAlbum4->chave);
                         cabecaVendidos->fim->gasto = auxAlbum4->gasto;
+                        printf("Problema na main?\n");
                         venderAlbum(auxAlbum4, &cabeca);
                         printf("Album %d vendido!\n", album);
                     }
@@ -1163,48 +1164,54 @@ void buscaFigurinhasRepetidas(TAlbum *album, TFig **figurinha, TSelecao *listase
 
 void venderAlbum(TAlbum *album, TCabeca **cabeca)
 {
-    TAlbum *aux = NULL;
-    aux = album;
-    if ((*cabeca)->inicio->chave == album->chave)
+    TAlbum *aux = NULL, *aux2 = NULL;
+
+    removeFigurinhasAlbum(&album->fig);
+
+    aux = (*cabeca)->inicio;
+    aux2 = aux;
+    if (aux->chave == album->chave)
     {
-        if (album->prox)
+
+        if (aux->prox)
         {
-            (*cabeca)->inicio = album->prox;
-            free(album);
-            album = NULL;
+            (*cabeca)->inicio = aux->prox;
+            free(aux);
+            aux = NULL;
         }
         else
         {
             (*cabeca)->inicio = NULL;
             (*cabeca)->fim = NULL;
-            free(album);
+            free(aux);
+            aux = NULL;
         }
     }
     else
     {
-        TAlbum *aux2 = NULL;
-        while (aux->chave != album->chave)
+
+        while ((album->chave != aux->chave) && (aux->prox != NULL))
         {
             aux2 = aux;
             aux = aux->prox;
         }
+        if (!aux)
+            return;
         if (aux->prox)
         {
             aux2->prox = aux->prox;
             free(aux);
-            // album = NULL;
+            aux = NULL;
         }
         else
         {
             (*cabeca)->fim = aux2;
-            free(aux);
-            aux = NULL;
+            free(album);
             aux2->prox = NULL;
-            // album = NULL;
+            album = NULL;
         }
     }
 }
-
 int checarAlbumCompleto(TAlbum *album)
 {
     int completo = 0, contJogador = 0;
