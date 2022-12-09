@@ -66,8 +66,12 @@ void venderAlbum(TAlbum *album, TCabeca **cabeca);
 int checarAlbumCompleto(TAlbum *album);
 void removeFigurinhasAlbum(TFig **figurinha);
 void removeFigurinha(TAlbum **figurinha, int cod, int jogador);
+void removeCabeca(TCabeca **cabeca);
+void desalocaTSelecao(TSelecao **selecao);
+void desalocaTJogador(TJogador **jogador);
 void criaArquivoAlbum(TAlbum *album);
 void criaArquivoAlbumRepetidas(TAlbum *album);
+void criaArquivoGastosELucros(float gastos, float lucros);
 
 int main()
 {
@@ -85,7 +89,6 @@ int main()
     while (!feof(arquivoSelecao))
         lerSelecoes(arquivoSelecao, &primSelecao);
     fclose(arquivoSelecao);
-    // imprimeListaSelecoes(primSelecao);
     while (!feof(arquivoFigurinhaJogador))
         lerFigurinhasJogadores(arquivoFigurinhaJogador, &primJogador);
     fclose(arquivoFigurinhaJogador);
@@ -93,13 +96,12 @@ int main()
         lerFigurinhasJogadoresEntrada(arquivoFigurinhaJogadorEntrada, &primJogadorEntrada);
     fclose(arquivoFigurinhaJogadorEntrada);
 
-    // imprimeListaFigurinhasJogadores(primJogador);
     TCabeca *cabeca = NULL;
     TCabeca *cabecaVendidos = NULL;
     cabeca = criaCabecaAlbum();
     cabecaVendidos = criaCabecaAlbum();
 
-    gastos += 12;
+    // gastos += 12;
     alocaAlbum(cabeca, 0, -1);
     p = (int *)malloc(sizeof(int) * 10);
     /*
@@ -124,6 +126,7 @@ int main()
             if (primJogadorEntrada)
             {
                 alocaAlbum(cabeca, 1, contadorAlbum);
+                gastos += 12;
                 contadorAlbum++;
                 TFig *aux = NULL;
                 aux = primJogadorEntrada;
@@ -134,14 +137,6 @@ int main()
                     aux = aux->prox;
                 }
                 aux = NULL;
-                // insereFigurinhaAlbum(&(cabeca->fim), aux->cod_selecao, aux->numero_jogador, primSelecao, primJogador, &(cabeca->repetidas));
-                // printf("R$%.2f\n", gastos);
-                // buscaFigurinhasRepetidas(cabeca->fim, &(cabeca->repetidas->fig), primSelecao, primJogador, &(cabeca->repetidas), cabeca);
-                // printf("################################################################\n");
-                // imprimeAlbum(cabeca->fim->fig);
-                // printf("################################\n");
-                // if (cabeca->repetidas->fig)
-                // imprimeAlbum(cabeca->repetidas->fig);
                 removeFigurinhasAlbum(&primJogadorEntrada);
                 printf("Figurinhas coladas!\n");
                 printf("\n");
@@ -159,20 +154,14 @@ int main()
             printf("\n");
             alocaAlbum(cabeca, 1, contadorAlbum);
             printf("Voce comprou o album %d!\n", cabeca->fim->chave);
+            gastos += 12;
             contadorAlbum++;
             buscaFigurinhasRepetidas(cabeca->fim, &(cabeca->repetidas->fig), primSelecao, primJogador, &(cabeca->repetidas), cabeca);
-            // printf("##########################################\n");
-            // printf("Album novo:\n");
-            // imprimeAlbum(cabeca->fim->fig);
-            // printf("######################################\n");
-            // printf("Repetidas:\n");
-            // if (cabeca->repetidas->fig)
-            // imprimeAlbum(cabeca->repetidas->fig);
             printf("\n");
         }
         break;
 
-        case 3: // #TODO: Ao comprar figurinhas para um album vendido da bug
+        case 3:
         {
             printf("\n");
             if (cabeca->inicio)
@@ -182,44 +171,51 @@ int main()
                 printf("Quero o album:");
                 scanf("%d", &op3);
                 printf("\n");
-                if (op3 >= contadorAlbum || op3 <= 0)
-                    printf("Voce nao possui um album %d.\n", contadorAlbum - 1);
+                if (op3 <= 0)
+                    printf("Insira um numero valido.\n");
                 else
                 {
                     TAlbum *auxAlbum3 = NULL;
                     TSelecao *auxSelecao3 = NULL;
                     TJogador *auxJogador3 = NULL;
-                    auxAlbum3 = buscaAlbum(cabeca->inicio, op3);
-                    gerarNumero(cont, p);
-                    printf("\n");
-                    printf("Voce comprou as seguintes figurinhas para o album %d:\n", auxAlbum3->chave);
-                    for (int k = 0; k < 5; k++)
-                    {
-                        if ((contadorExtra % 190) == 0 || (contadorExtra % 317) == 0 || (contadorExtra % 950) == 0 || (contadorExtra % 1900) == 0)
-                        {
-                            insereFigurinhaAlbum(&(auxAlbum3), *(p + k), 20, primSelecao, primJogador, &(cabeca->repetidas));
-                            printf("Parabens, voce conseguiu uma figurinha extra!\n");
-                        }
-                        else
-                        {
-                            insereFigurinhaAlbum(&(auxAlbum3), *(p + k), *(p + k + 5), primSelecao, primJogador, &(cabeca->repetidas));
-                            auxSelecao3 = buscaSelecao(primSelecao, *(p + k));
-                            auxJogador3 = buscaJogador(primJogador, *(p + k + 5), *(p + k));
-                            printf("\t%d %s %d %s\n", auxJogador3->cod_selecao, auxSelecao3->selecao, auxJogador3->chave, auxJogador3->nome);
-                        }
-                    }
-                    gastos += 4;
-                    contadorExtra++;
-                    auxSelecao3 = NULL;
-                    auxJogador3 = NULL;
-                    auxAlbum3 = NULL;
                     auxAlbum3 = cabeca->inicio;
-                    while (auxAlbum3)
-                    {
-                        if (auxAlbum3)
-                            buscaFigurinhasRepetidas(auxAlbum3, &(cabeca->repetidas->fig), primSelecao, primJogador, &(cabeca->repetidas), cabeca);
+                    while (auxAlbum3->chave != op3 && auxAlbum3->prox != NULL)
                         auxAlbum3 = auxAlbum3->prox;
+                    if (auxAlbum3->chave == op3 && auxAlbum3 != NULL)
+                    {
+                        gerarNumero(cont, p);
+                        printf("\n");
+                        printf("Voce comprou as seguintes figurinhas para o album %d:\n", auxAlbum3->chave);
+                        for (int k = 0; k < 5; k++)
+                        {
+                            if ((contadorExtra % 190) == 0 || (contadorExtra % 317) == 0 || (contadorExtra % 950) == 0 || (contadorExtra % 1900) == 0)
+                            {
+                                insereFigurinhaAlbum(&(auxAlbum3), *(p + k), 20, primSelecao, primJogador, &(cabeca->repetidas));
+                                printf("Parabens, voce conseguiu uma figurinha extra!\n");
+                            }
+                            else
+                            {
+                                insereFigurinhaAlbum(&(auxAlbum3), *(p + k), *(p + k + 5), primSelecao, primJogador, &(cabeca->repetidas));
+                                auxSelecao3 = buscaSelecao(primSelecao, *(p + k));
+                                auxJogador3 = buscaJogador(primJogador, *(p + k + 5), *(p + k));
+                                printf("\t%d %s %d %s\n", auxJogador3->cod_selecao, auxSelecao3->selecao, auxJogador3->chave, auxJogador3->nome);
+                            }
+                        }
+                        gastos += 4;
+                        contadorExtra++;
+                        auxSelecao3 = NULL;
+                        auxJogador3 = NULL;
+                        auxAlbum3 = NULL;
+                        auxAlbum3 = cabeca->inicio;
+                        while (auxAlbum3)
+                        {
+                            if (auxAlbum3)
+                                buscaFigurinhasRepetidas(auxAlbum3, &(cabeca->repetidas->fig), primSelecao, primJogador, &(cabeca->repetidas), cabeca);
+                            auxAlbum3 = auxAlbum3->prox;
+                        }
                     }
+                    else
+                        printf("Voce nao possui um album com chave %d.\n", op3);
                 }
             }
             else
@@ -274,7 +270,6 @@ int main()
                         lucros += auxAlbum4->gasto;
                         alocaAlbum(cabecaVendidos, 1, auxAlbum4->chave);
                         cabecaVendidos->fim->gasto = auxAlbum4->gasto;
-                        printf("Problema na main?\n");
                         venderAlbum(auxAlbum4, &cabeca);
                         printf("Album %d vendido!\n", album);
                     }
@@ -357,7 +352,11 @@ int main()
                 printf("\tR$%.2f\n", cabeca->repetidas->gasto);
             }
             else
+            {
+                if (gastos)
+                    printf("Gasto total: R$%.2f\n\n", gastos);
                 printf("Voce nao possui nenhum album.\n");
+            }
             printf("\n");
         }
         break;
@@ -446,15 +445,73 @@ int main()
                     criaArquivoAlbumRepetidas(cabeca->repetidas);
                     printf("As figurinhas repetidas foram salvas em: 'figurinhas_repetidas.txt'.\n");
                 }
+                printf("Seus gastos e lucros foram salvos em 'custos_e_lucros_obtidos.txt'\n");
+                criaArquivoGastosELucros(gastos, lucros);
+                auxAlbum9 = NULL;
+                if (primSelecao)
+                {
+                    desalocaTSelecao(&primSelecao);
+                    // printf("primSelecao desalocado.\n");
+                }
+                if (primJogador)
+                {
+                    desalocaTJogador(&primJogador);
+                    // printf("primJogador desalocado.\n");
+                }
+                if (cabeca)
+                {
+                    removeCabeca(&cabeca);
+                    cabeca = NULL;
+                    // printf("Cabeca desalocado.\n");
+                }
+                if (cabecaVendidos)
+                {
+                    removeCabeca(&cabecaVendidos);
+                    cabecaVendidos = NULL;
+                    // printf("Cabeca vendidos desalocado.\n");
+                }
+                printf("Toda memoria alocada dinamicamente foi desalocada.\n");
                 printf("Encerrando programa.\n");
             }
             else
             {
+                if (cabeca->repetidas->fig)
+                {
+                    criaArquivoAlbumRepetidas(cabeca->repetidas);
+                    printf("As figurinhas repetidas foram salvas em: 'figurinhas_repetidas.txt'.\n");
+                }
+                printf("Seus gastos e lucros foram salvos em 'custos_e_lucros_obtidos.txt'\n");
+                criaArquivoGastosELucros(gastos, lucros);
+                if (primSelecao)
+                {
+                    desalocaTSelecao(&primSelecao);
+                    // printf("primSelecao desalocado.\n");
+                }
+                if (primJogador)
+                {
+                    desalocaTJogador(&primJogador);
+                    // printf("primJogador desalocado.\n");
+                }
+                if (cabeca)
+                {
+                    removeCabeca(&cabeca);
+                    cabeca = NULL;
+                    // printf("Cabeca desalocado.\n");
+                }
+                if (cabecaVendidos)
+                {
+                    removeCabeca(&cabecaVendidos);
+                    cabecaVendidos = NULL;
+                    // printf("Cabeca vendidos desalocado.\n");
+                }
+                printf("Toda memoria alocada dinamicamente foi desalocada.\n");
                 printf("Encerrando programa.\n");
             }
             printf("\n");
         }
         break;
+        default:
+            break;
         }
     }
 }
@@ -534,8 +591,6 @@ TFig *alocaFigurinhaAlbum(TSelecao *structSelecao, TJogador *structJogador)
     strcpy(novo->nome, structJogador->nome);
     strcpy(novo->selecao, structSelecao->selecao);
     novo->prox = NULL;
-    // printf("\n###############\n");
-    // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
     return novo;
 }
 
@@ -568,17 +623,12 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                 while ((aux->prox != NULL))
                 {
                     if (aux->cod_selecao >= novo->cod_selecao)
-                    {
-                        // printf("Breakou\n aux:%d aux2:%d novo:%d\n", aux->cod_selecao, aux2->cod_selecao, novo->cod_selecao);
-                        // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                         break;
-                    }
                     aux2 = aux;
                     aux = aux->prox;
                 }
                 if (!aux->prox)
                 {
-                    // printf("Falha segmentacao\n");
                     if (novo->cod_selecao <= aux->cod_selecao)
                     {
                         if (novo->cod_selecao == aux->cod_selecao)
@@ -616,8 +666,6 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                     }
                     else
                     {
-                        // printf("aqui está o bug? aux:%d aux2:%d novo:%d\n", aux->cod_selecao, aux2->cod_selecao, novo->cod_selecao);
-                        // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                         aux->prox = novo;
                         novo->prox = NULL;
                     }
@@ -626,7 +674,6 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                 {
                     novo->prox = aux2->prox;
                     aux2->prox = novo;
-                    // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                 }
                 else if (aux->cod_selecao == novo->cod_selecao)
                 {
@@ -639,8 +686,6 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                             (*album)->gasto -= 0.8;
                             return;
                         }
-                        // printf("!!aux: %d, aux2: %d, novo:%d\n", aux->numero_jogador, aux2->numero_jogador, novo->numero_jogador);
-                        // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                         novo->prox = aux;
                         aux2->prox = novo;
                     }
@@ -653,9 +698,7 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                             return;
                         }
                         while (aux->prox != NULL && aux->prox->cod_selecao == novo->cod_selecao && aux->prox->numero_jogador <= novo->numero_jogador)
-                        {
                             aux = aux->prox;
-                        }
                         if (aux->numero_jogador == novo->numero_jogador)
                         {
                             insereFigurinhaAlbumRepetida(repetidas, novo);
@@ -664,15 +707,11 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                         }
                         if (aux->prox)
                         {
-                            // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                             novo->prox = aux->prox;
                             aux->prox = novo;
                         }
                         else
-                        {
                             aux->prox = novo;
-                            // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
-                        }
                     }
                 }
                 else
@@ -698,7 +737,7 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
             }
         }
 
-        else if (aux->cod_selecao == novo->cod_selecao) // Se a primeira figurinha já for a selecao correta // CONDICAO CORRETA!!!!
+        else if (aux->cod_selecao == novo->cod_selecao) // Se a primeira figurinha já for a selecao correta
         {
             if (aux->numero_jogador == novo->numero_jogador)
             {
@@ -744,7 +783,6 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
                 }
                 else
                 {
-                    // printf("Aki estava o problema?\n");
                     novo->prox = aux3->prox;
                     aux3->prox = novo;
                 }
@@ -767,7 +805,6 @@ void insereFigurinhaAlbum(TAlbum **album, int selecao, int jogador, TSelecao *li
         }
         else // Insere no inicio
         {
-            // printf("Aki?\n");
             novo->prox = (*album)->fig;
             (*album)->fig = novo;
             return;
@@ -797,17 +834,12 @@ void insereFigurinhaAlbumRepetida(TAlbum **repetida, TFig *novo)
                 while ((aux->prox != NULL))
                 {
                     if (aux->cod_selecao >= novo->cod_selecao)
-                    {
-                        // printf("Breakou\n aux:%d aux2:%d novo:%d\n", aux->cod_selecao, aux2->cod_selecao, novo->cod_selecao);
-                        // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                         break;
-                    }
                     aux2 = aux;
                     aux = aux->prox;
                 }
                 if (!aux->prox)
                 {
-                    // printf("Falha segmentacao\n");
                     if (novo->cod_selecao <= aux->cod_selecao)
                     {
                         if (novo->cod_selecao == aux->cod_selecao)
@@ -833,8 +865,6 @@ void insereFigurinhaAlbumRepetida(TAlbum **repetida, TFig *novo)
                     }
                     else
                     {
-                        // printf("aqui está o bug? aux:%d aux2:%d novo:%d\n", aux->cod_selecao, aux2->cod_selecao, novo->cod_selecao);
-                        // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                         aux->prox = novo;
                         novo->prox = NULL;
                     }
@@ -843,15 +873,12 @@ void insereFigurinhaAlbumRepetida(TAlbum **repetida, TFig *novo)
                 {
                     novo->prox = aux2->prox;
                     aux2->prox = novo;
-                    // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                 }
                 else if (aux->cod_selecao == novo->cod_selecao)
                 {
 
                     if (aux->numero_jogador >= novo->numero_jogador)
                     {
-                        // printf("!!aux: %d, aux2: %d, novo:%d\n", aux->numero_jogador, aux2->numero_jogador, novo->numero_jogador);
-                        // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                         novo->prox = aux;
                         aux2->prox = novo;
                     }
@@ -869,15 +896,11 @@ void insereFigurinhaAlbumRepetida(TAlbum **repetida, TFig *novo)
                         }
                         if (aux->prox)
                         {
-                            // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
                             novo->prox = aux->prox;
                             aux->prox = novo;
                         }
                         else
-                        {
                             aux->prox = novo;
-                            // printf("%d %d %s %s\n\n", novo->cod_selecao, novo->numero_jogador, novo->nome, novo->selecao);
-                        }
                     }
                 }
                 else
@@ -887,9 +910,8 @@ void insereFigurinhaAlbumRepetida(TAlbum **repetida, TFig *novo)
                 aux->prox = novo;
         }
 
-        else if (aux->cod_selecao == novo->cod_selecao) // Se a primeira figurinha já for a selecao correta // CONDICAO CORRETA!!!!
+        else if (aux->cod_selecao == novo->cod_selecao) // Se a primeira figurinha já for a selecao correta
         {
-            // printf("Chegou aki?%d %d\n", aux->cod_selecao, novo->cod_selecao);
 
             if (aux->numero_jogador > novo->numero_jogador)
             {
@@ -904,8 +926,6 @@ void insereFigurinhaAlbumRepetida(TAlbum **repetida, TFig *novo)
                     aux3 = aux;
                     if ((aux->prox->numero_jogador > novo->numero_jogador))
                     {
-                        // printf("Existe\n");
-
                         novo->prox = aux->prox;
                         aux->prox = novo;
                         return;
@@ -914,20 +934,15 @@ void insereFigurinhaAlbumRepetida(TAlbum **repetida, TFig *novo)
                 }
 
                 if (!aux->prox)
-                {
                     aux->prox = novo;
-                }
                 else
                 {
-                    // printf("Aki estava o problema?\n");
                     novo->prox = aux3->prox;
                     aux3->prox = novo;
                 }
             }
             else if (!aux->prox)
-            {
                 aux->prox = novo;
-            }
             else
             {
                 novo->prox = aux->prox;
@@ -936,7 +951,6 @@ void insereFigurinhaAlbumRepetida(TAlbum **repetida, TFig *novo)
         }
         else // Insere no inicio
         {
-            // printf("Aki?\n");
             novo->prox = (*repetida)->fig;
             (*repetida)->fig = novo;
             return;
@@ -967,42 +981,6 @@ TFig *alocaFigurinhaJogadorEntrada(FILE *parquivo) // Cria e retorna um nó TFig
     return novo;
 }
 
-/*
-void insereRepetidasVendidas(TFigurinhaVendida **prim, TAlbum *repetidas)
-{
-    if (!(*prim)->fig)
-    {
-        TFigurinhaVendida *aux = NULL;
-        aux = *prim;
-        *prim = alocaFigurinhaAlbumVendidos(repetidas);
-
-        while (repetidas)
-        {
-            if (repetidas->fig)
-            {
-                aux->fig = repetidas->fig;
-                aux = aux->fig->prox;
-                repetidas = repetidas->prox;
-            }
-        }
-    }
-    else
-    {
-        TFig *aux = NULL;
-        aux = (*prim)->fig;
-        while(aux->prox)
-            aux = aux->prox;
-        while(repetidas->fig)
-        {
-            if(repetidas->fig)
-            {
-                aux->prox = repetidas->fig
-            }
-        }
-    }
-
-}
-*/
 void lerSelecoes(FILE *parquivo, TSelecao **prim) // Insere no final um TSelecao na lista encadeada
 {
     if (!(*prim))
@@ -1063,10 +1041,6 @@ void imprimeListaSelecoes(TSelecao *p) // Printa a lista encadeada de 'seleçõe
             p = p->prox;
         }
     }
-    else
-    {
-        printf("\nPosto vazio!\n");
-    }
 }
 
 void imprimeListaFigurinhasJogadores(TJogador *p) // Printa a lista encadeada de 'figurinhas_total'
@@ -1078,10 +1052,6 @@ void imprimeListaFigurinhasJogadores(TJogador *p) // Printa a lista encadeada de
             printf("%d %d %s\n", p->cod_selecao, p->chave, p->nome);
             p = p->prox;
         }
-    }
-    else
-    {
-        printf("\nPosto vazio!\n");
     }
 }
 
@@ -1098,7 +1068,7 @@ void imprimeAlbum(TFig *album)
 }
 
 TSelecao *buscaSelecao(TSelecao *listaselec, int selec)
-{ // Ata pia, nao sabia, tá certo agora né ? acho que ta
+{
     TSelecao *tmp = NULL;
     tmp = listaselec;
     while (tmp->prox != NULL && tmp->cod_selecao != selec)
@@ -1107,11 +1077,9 @@ TSelecao *buscaSelecao(TSelecao *listaselec, int selec)
 }
 
 TJogador *buscaJogador(TJogador *listajog, int jogador, int selecao)
-{ // É isso. Tem q testar na main só. Printa na main pra ver se ta td certo
+{
     TJogador *tmp = NULL;
     tmp = listajog;
-    // Sim pia
-    //  A gente ta forcando que o numero seja entre 0 e 19, nunca vai chegar a tmp->prox == NULL
     while (tmp->cod_selecao != selecao)
         tmp = tmp->prox;
     while (tmp->chave != jogador)
@@ -1216,10 +1184,7 @@ int checarAlbumCompleto(TAlbum *album)
 {
     int completo = 0, contJogador = 0;
     TFig *aux = NULL;
-    // TAlbum *aux2 = NULL;
     aux = album->fig;
-    // aux2 = album;
-    // printf("%d %d\n", aux->cod_selecao, aux->numero_jogador);
     if (album->fig == NULL || album == NULL)
         return completo;
     while (aux)
@@ -1283,6 +1248,63 @@ void removeFigurinha(TAlbum **figurinha, int cod, int jogador)
     }
 }
 
+void removeCabeca(TCabeca **cabeca)
+{
+    if (!(*cabeca))
+        return;
+    if (!(*cabeca)->inicio)
+    {
+        if ((*cabeca)->repetidas)
+        {
+            free((*cabeca)->repetidas);
+            (*cabeca)->repetidas = NULL;
+        }
+        free(*cabeca);
+        *cabeca = NULL;
+        return;
+    }
+    if ((*cabeca)->inicio->fig)
+    {
+        removeFigurinhasAlbum(&(*cabeca)->inicio->fig);
+    }
+    TAlbum *aux = (*cabeca)->inicio;
+    if (aux->prox)
+    {
+        (*cabeca)->inicio = aux->prox;
+        free(aux);
+        aux = NULL;
+    }
+    else
+    {
+        free((*cabeca)->inicio);
+        if ((*cabeca)->repetidas)
+        {
+            free((*cabeca)->repetidas);
+            (*cabeca)->repetidas = NULL;
+        }
+        (*cabeca)->inicio = NULL;
+        (*cabeca)->fim = NULL;
+        free(*cabeca);
+        *cabeca = NULL;
+    }
+}
+
+void desalocaTSelecao(TSelecao **selecao)
+{
+    if (*selecao == NULL)
+        return;
+    free(*selecao);
+    *selecao = NULL;
+}
+
+void desalocaTJogador(TJogador **jogador)
+{
+    if (*jogador == NULL)
+        return;
+    free(*jogador);
+    *jogador = NULL;
+}
+
 void criaArquivoAlbum(TAlbum *album)
 {
     FILE *arquivo;
@@ -1312,5 +1334,14 @@ void criaArquivoAlbumRepetidas(TAlbum *album)
         fprintf(arquivo, "%d %s %d %s\n", album->fig->cod_selecao, album->fig->selecao, album->fig->numero_jogador, album->fig->nome);
         album->fig = album->fig->prox;
     }
+    fclose(arquivo);
+}
+
+void criaArquivoGastosELucros(float gastos, float lucros)
+{
+    FILE *arquivo;
+    char nomeArquivo[30] = "custos_e_lucros_obtidos.txt";
+    arquivo = fopen(nomeArquivo, "w");
+    fprintf(arquivo, "%s %s %s%.2f\n%s %s %s%.2f\n", "Gasto", "Total:", "R$", gastos, "Lucro", "Total:", "R$", lucros);
     fclose(arquivo);
 }
